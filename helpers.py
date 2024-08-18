@@ -2,6 +2,8 @@ import requests
 import os
 import zipfile
 import time
+import pycountry
+import numpy as np
 
 class GetData:
     
@@ -83,3 +85,99 @@ class GetData:
                     break  # Exit the loop after renaming the first match
 
         print("Renaming completed.")
+
+class DataFrameAnalyzer:
+    def __init__(self):
+        pass
+
+    def print_info(self, dataframes):
+        """Print the info of each DataFrame in the dictionary."""
+        for name, df in dataframes.items():
+            print(f"Info of {name}:")
+            print(df.info())
+            print("\n" + "="*50 + "\n")
+
+    def print_shape(self, dataframes):
+        """Print the shape (rows, columns) of each DataFrame in the dictionary."""
+        for name, df in dataframes.items():
+            print(f"Shape of {name}: {df.shape}")
+
+    def print_describe(self, dataframes):
+        """Print the statistical summary of each DataFrame in the dictionary."""
+        for name, df in dataframes.items():
+            print(f"Description of {name}:")
+            print(df.describe())
+            print("\n" + "="*50 + "\n")
+
+    def print_head(self, dataframes, n=5):
+        """Print the first n rows of each DataFrame in the dictionary."""
+        for name, df in dataframes.items():
+            print(f"First {n} rows of {name}:")
+            print(df.head(n))
+            print("\n" + "="*50 + "\n")
+
+    def print_missing_values(self, dataframes):
+        """Print the number of missing values in each DataFrame."""
+        for name, df in dataframes.items():
+            print(f"Missing values in {name}:")
+            print(df.isnull().sum())
+            print("\n" + "="*50 + "\n")
+
+    def print_unique_values(self, dataframes):
+        """Print the number of unique values for each column in the DataFrames."""
+        for name, df in dataframes.items():
+            print(f"Unique values in {name}:")
+            print(df.nunique())
+            print("\n" + "="*50 + "\n")
+
+    def print_column_names(self, dataframes):
+        "Print the coumn names of each dataframe."
+        for name, df, in dataframes.items():
+            print(f'{name} column names: {df.columns}')
+            print("\n" + "="*50 + "\n")
+
+    def check_column_names_equal(self, dataframes, target_dataframe_name='cotwo_emissions'):
+        """Compares the columns between the target dataframe and all other dataframes, prints if a dataframe has different columns"""
+        target_dataframe = dataframes[target_dataframe_name]
+        for name, df, in dataframes.items():
+            if not np.array_equal(target_dataframe.columns, df.columns):
+                print(f'The dataframe {name} has different column names')
+            else:
+                print("- All columns are equal -")
+
+
+
+
+class ManipulateData:
+    def __init__(self) -> None:
+        self.valid_countries = [country.name for country in pycountry.countries]
+
+    def eliminate_non_country_data(self, dataframe_dict):
+        '''
+        Returns a dataframe dictionary with only valid countries data
+        '''
+
+        for indicator_name, indicator_df in dataframe_dict.items():
+            dataframe_dict[indicator_name] = indicator_df[indicator_df['Country Name'].isin(self.valid_countries)]
+
+        return dataframe_dict
+    
+    def modify_dataframes_based_on_a_target_dataframe(self, dataframe_dict, target_dataframe_name ='cotwo_emissions'):
+        '''
+        Returns a dataframe dictionary where each dataframe is modified to meet the shape and convey the same information as the
+        target_dataframe
+        '''
+        
+        target_dataframe = dataframe_dict[target_dataframe_name]
+        target_dataframe_columns = list(target_dataframe.columns)
+        target_dataframe_countries = list(target_dataframe['Country Name'].unique())
+        
+        for indicator_name, indicator_df in dataframe_dict.items():
+
+            if indicator_name != target_dataframe_name:
+                dataframe_dict[indicator_name] = indicator_df[target_dataframe_columns][indicator_df['Country Name'].isin(target_dataframe_countries)]
+            else:
+                continue
+        
+        return dataframe_dict
+
