@@ -5,6 +5,9 @@ import time
 import pycountry
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.model_selection import KFold
+from sklearn.metrics import root_mean_squared_error, r2_score
 
 class GetData:
     
@@ -125,11 +128,11 @@ class DataFrameAnalyzer:
             print(df.isnull().sum())
             print("\n" + "="*50 + "\n")
 
-    def print_unique_values(self, dataframes):
+    def print_unique_values(self, dataframes, col_name):
        
-        for name, df in dataframes.items():
-            print(f"Unique values in {name}:")
-            print(df.nunique())
+        for df in dataframes.values():
+            print(f"{col_name} unique values:")
+            print(df[col_name].unique())
             print("\n" + "="*50 + "\n")
 
     def print_column_names(self, dataframes):
@@ -138,7 +141,7 @@ class DataFrameAnalyzer:
             print(f'{name} column names: {df.columns}')
             print("\n" + "="*50 + "\n")
 
-    def check_column_names_equal(self, dataframes, target_dataframe_name='cotwo_emissions'):
+    def check_column_names_equal(self, dataframes, target_dataframe_name='cotwo_emi'):
         
         target_dataframe = dataframes[target_dataframe_name]
         for name, df, in dataframes.items():
@@ -180,7 +183,7 @@ class ManipulateData:
 
         return dataframe_dict
     
-    def modify_dataframes_based_on_a_target_dataframe(self, dataframe_dict, target_dataframe_name ='cotwo_emissions'):
+    def modify_dataframes_based_on_a_target_dataframe(self, dataframe_dict, target_dataframe_name ='cotwo_emi'):
         '''
         Returns a dataframe dictionary where each dataframe is modified to meet the shape and convey the same information as the
         target_dataframe
@@ -231,4 +234,92 @@ class ManipulateData:
             oecd_df = pd.concat([oecd_df, oecd_row], axis=1)
 
         return oecd_df
+    
+    def drop_oecd_members_rows(self, dataframe_dict):
+
+        for indicator_name, indicator_df in dataframe_dict.items():
+            dataframe_dict[indicator_name] = indicator_df[indicator_df['Country Name'] != 'OECD members']
+        
+        return dataframe_dict
+    
+
+    
+    def df_to_csv_all(self, dataframe_dict, storage_folder = 'clean_data'):
+
+        for indicator_name, indicator_df in dataframe_dict.items():
+            file_path = f'{storage_folder}/{indicator_name}.csv'
+            indicator_df.to_csv(file_path, index=False)
+    
+    def drop_indicator_data_cols(self, dataframe_dict):
+        """
+        Drops the Indicator Name and Indicator Code columns from the dataframes
+        """
+        for indicator_name, indicator_df in dataframe_dict.items():
+            dataframe_dict[indicator_name] = indicator_df.drop(columns=["Country Code", "Indicator Name", "Indicator Code"])
+        
+        return dataframe_dict
+    
+    def add_suffix_to_cols(self, dataframe_dict):
+
+        for indicator_name, indicator_df in dataframe_dict.items():
+            dataframe_dict[indicator_name] = indicator_df.rename(columns=lambda x: x + '_' + indicator_name if x != "Country Name" else x)
+
+        return dataframe_dict
+    
+    def merge_all_indicators(self, dataframe_dict):
+
+        dfs = list(dataframe_dict.values())
+        combined_df = pd.merge(dfs[0], dfs[1], on="Country Name")
+        for df in dfs[2:]:
+            combined_df = pd.merge(combined_df, df, on="Country Name")
+        
+        return combined_df
+
+class ModelEvaluation:
+
+    def __init__(self) -> None:
+        pass
+
+    def run_q2_regression_experiment(self, model, X, y, poly_degree=None, scaling=True, cv_folds=5):
+        # Ensure X and y are numpy arrays
+        X = np.array(X)
+        y = np.array(y)
+
+        kf = KFold(n_splits=cv_folds, shuffle=True, random_state=42)
+        rmse_scores = []
+        r2_scores = []
+        
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            
+
+            if poly_degree:
+                poly = PolynomialFeatures(degree=poly_degree, include_bias=False)
+                X_train = poly.fit_transform(X_train)
+                X_test = poly.transform(X_test)
+            
+
+            if scaling:
+                scaler = StandardScaler()
+                X_train = scaler.fit_transform(X_train)
+                X_test = scaler.transform(X_test)
+            
+        
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            
+            rmse = root_mean_squared_error(y_test, y_pred)
+            r2 = r2_score(y_test, y_pred)
+            
+            rmse_scores.append(rmse)
+            r2_scores.append(r2)
+        
+        return {
+            "Model": model.__class__.__name__,
+            "Poly Degree": poly_degree,
+            "Scaling": scaling,
+            "Average RMSE": np.mean(rmse_scores),
+            "Average R²": np.mean(r2_scores)
+        }
 
