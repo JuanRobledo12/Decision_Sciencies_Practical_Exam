@@ -4,6 +4,7 @@ import zipfile
 import time
 import pycountry
 import numpy as np
+import pandas as pd
 
 class GetData:
     
@@ -13,6 +14,7 @@ class GetData:
         self.delay = delay
     
     def get_query_url(self, indicator_code):
+        
         query_url = self.main_url.format(indicator_code)
         print(query_url)
         return query_url
@@ -91,53 +93,53 @@ class DataFrameAnalyzer:
         pass
 
     def print_info(self, dataframes):
-        """Print the info of each DataFrame in the dictionary."""
+        
         for name, df in dataframes.items():
             print(f"Info of {name}:")
             print(df.info())
             print("\n" + "="*50 + "\n")
 
     def print_shape(self, dataframes):
-        """Print the shape (rows, columns) of each DataFrame in the dictionary."""
+        
         for name, df in dataframes.items():
             print(f"Shape of {name}: {df.shape}")
 
     def print_describe(self, dataframes):
-        """Print the statistical summary of each DataFrame in the dictionary."""
+        
         for name, df in dataframes.items():
             print(f"Description of {name}:")
             print(df.describe())
             print("\n" + "="*50 + "\n")
 
     def print_head(self, dataframes, n=5):
-        """Print the first n rows of each DataFrame in the dictionary."""
+        
         for name, df in dataframes.items():
             print(f"First {n} rows of {name}:")
             print(df.head(n))
             print("\n" + "="*50 + "\n")
 
     def print_missing_values(self, dataframes):
-        """Print the number of missing values in each DataFrame."""
+        
         for name, df in dataframes.items():
             print(f"Missing values in {name}:")
             print(df.isnull().sum())
             print("\n" + "="*50 + "\n")
 
     def print_unique_values(self, dataframes):
-        """Print the number of unique values for each column in the DataFrames."""
+       
         for name, df in dataframes.items():
             print(f"Unique values in {name}:")
             print(df.nunique())
             print("\n" + "="*50 + "\n")
 
     def print_column_names(self, dataframes):
-        "Print the coumn names of each dataframe."
+        
         for name, df, in dataframes.items():
             print(f'{name} column names: {df.columns}')
             print("\n" + "="*50 + "\n")
 
     def check_column_names_equal(self, dataframes, target_dataframe_name='cotwo_emissions'):
-        """Compares the columns between the target dataframe and all other dataframes, prints if a dataframe has different columns"""
+        
         target_dataframe = dataframes[target_dataframe_name]
         for name, df, in dataframes.items():
             if not np.array_equal(target_dataframe.columns, df.columns):
@@ -146,11 +148,27 @@ class DataFrameAnalyzer:
                 print("- All columns are equal -")
 
 
-
-
 class ManipulateData:
     def __init__(self) -> None:
         self.valid_countries = [country.name for country in pycountry.countries]
+        self.oecd_countries = countries = [
+                        "Australia", "Austria", "Belgium", "Canada", "Chile", "Colombia", 
+                        "Costa Rica", "Czechia", "Denmark", "Estonia", "Finland", "France", 
+                        "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Israel", 
+                        "Italy", "Japan", "Korea, Rep.", "Latvia", "Lithuania", "Luxembourg", 
+                        "Mexico", "Netherlands", "New Zealand", "Norway", "Poland", 
+                        "Portugal", "Slovak Republic", "Slovenia", "Spain", "Sweden", 
+                        "Switzerland", "Turkiye", "United Kingdom", "United States", "OECD members"
+                        ]
+
+        
+    def create_oecd_country_subset(self, dataframe_dict):
+        
+        for indicator_name, indicator_df in dataframe_dict.items():
+            dataframe_dict[indicator_name] = indicator_df[indicator_df['Country Name'].isin(self.oecd_countries)].reset_index(drop=True)
+
+        return dataframe_dict
+
 
     def eliminate_non_country_data(self, dataframe_dict):
         '''
@@ -158,7 +176,7 @@ class ManipulateData:
         '''
 
         for indicator_name, indicator_df in dataframe_dict.items():
-            dataframe_dict[indicator_name] = indicator_df[indicator_df['Country Name'].isin(self.valid_countries)]
+            dataframe_dict[indicator_name] = indicator_df[(indicator_df['Country Name'].isin(self.valid_countries)) | (indicator_df['Country Name'] == 'World')]
 
         return dataframe_dict
     
@@ -180,4 +198,37 @@ class ManipulateData:
                 continue
         
         return dataframe_dict
+    
+    def impute_data(self, dataframe_dict):
+
+        for indicator_name, indicator_df in dataframe_dict.items():
+            
+
+            indicator_df = indicator_df.infer_objects(copy=False)
+            
+            # Apply interpolation only to numeric columns and then forward/backward fill
+            numeric_cols = indicator_df.select_dtypes(include=[np.number])
+            indicator_df[numeric_cols.columns] = numeric_cols.interpolate(method='linear', axis=0).ffill().bfill()
+            
+            dataframe_dict[indicator_name] = indicator_df
+
+        return dataframe_dict
+    
+    def create_oecd_dataframe(self, dataframe_dict):
+
+        oecd_df = pd.DataFrame()
+
+        for indicator_name, indicator_df in dataframe_dict.items():
+
+            oecd_row = indicator_df[indicator_df['Country Name'] == 'OECD members']
+            
+            oecd_row = oecd_row.drop(columns=['Country Name', 'Country Code', 'Indicator Name', 'Indicator Code'])
+
+            # Transpose the row to have years as the index and the indicator name as the column name
+            oecd_row = oecd_row.transpose()
+            oecd_row.columns = [indicator_name]
+
+            oecd_df = pd.concat([oecd_df, oecd_row], axis=1)
+
+        return oecd_df
 
