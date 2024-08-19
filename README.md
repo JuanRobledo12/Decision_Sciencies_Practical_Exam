@@ -10,8 +10,16 @@ Welcome to my Practical Exam repository. Below you can find links to the files r
 - Q2 Jupyter Notebook: [q2.ipynb](q2.ipynb)
 - Markdown file: [q2.md](/deliverables/q2.md)
 
+## Question 4: Classification and Policy Implications
+- Q4 Jupyter Notebook: [q4.ipynb](q4.ipynb)
+- Markdown file: [q4.md](/deliverables/q4.md)
+
 ## Additional Files
 - [helpers.py](helpers.py): A set of classes and methods that I developed to assist with data preprocessing, analysis, and evaluation.
+
+## Observations
+- I decided to only use data of countries from the OECD to help me reduce the complexity of the data cleaning process. However, it might have impacted on the performance of the Q2, and Q4 models due to the lack of data.
+- In Q4 I need to further explore why I am getting overly optimistic metrics. In addition, I need to analyze the relationship between the features and the target variables with side-by-side boxplots or overlapping histograms.
 
 ## Requirements
 

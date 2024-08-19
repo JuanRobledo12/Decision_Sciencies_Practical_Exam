@@ -154,7 +154,7 @@ class DataFrameAnalyzer:
 class ManipulateData:
     def __init__(self) -> None:
         self.valid_countries = [country.name for country in pycountry.countries]
-        self.oecd_countries = countries = [
+        self.oecd_countries = [
                         "Australia", "Austria", "Belgium", "Canada", "Chile", "Colombia", 
                         "Costa Rica", "Czechia", "Denmark", "Estonia", "Finland", "France", 
                         "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Israel", 
@@ -238,8 +238,8 @@ class ManipulateData:
     def drop_oecd_members_rows(self, dataframe_dict):
 
         for indicator_name, indicator_df in dataframe_dict.items():
-            dataframe_dict[indicator_name] = indicator_df[indicator_df['Country Name'] != 'OECD members']
-        
+            dataframe_dict[indicator_name] = indicator_df[indicator_df['Country Name'] != 'OECD members'].reset_index(drop=True)
+
         return dataframe_dict
     
 
@@ -274,6 +274,17 @@ class ManipulateData:
             combined_df = pd.merge(combined_df, df, on="Country Name")
         
         return combined_df
+    
+    def q4_create_target_variable(self, cotwo_df, start='1997', end='2006', threshold = -10):
+        
+        cotwo_df_copy = cotwo_df.copy()
+        # Calculate the percentage change between the start and end year
+        cotwo_df_copy['Percentage Change'] = ((cotwo_df_copy[end] - cotwo_df_copy[start]) / cotwo_df_copy[start]) * 100
+        
+        # Define the binary target variable
+        cotwo_df_copy['Target'] = cotwo_df_copy['Percentage Change'].apply(lambda x: 1 if x <= threshold else 0)
+
+        return cotwo_df_copy
 
 class ModelEvaluation:
 
