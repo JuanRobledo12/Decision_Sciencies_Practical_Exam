@@ -1,15 +1,45 @@
 # Entering Practical Exam for the Decision Sciences Research Center at Tecnologico de Monterrey
 
-Welcome to my Practical Exam repository. Below you can find the file links related to each of the exam questions deliverables I was able to complete.
+Welcome to my Practical Exam repository. Below you can find links to the files related to each of the exam questions' deliverables that I was able to complete.
+
 ## Question 1: Comprehensive Data Acquisition and Preprocessing
 - Q1 Jupyter Notebook: [q1.ipynb](q1.ipynb)
 - Markdown file: [q1.md](/deliverables/q1.md)
 
-## Additional files
-- [helpers.py](helpers.py) : A set of classes and methods that I developed to assist in the data preprocessing and analysis.  
+## Question 2: Predictive Modeling and Scenario Analysis
+- Q2 Jupyter Notebook: [q2.ipynb](q2.ipynb)
+- Markdown file: [q2.md](/deliverables/q2.md)
+
+## Additional Files
+- [helpers.py](helpers.py): A set of classes and methods that I developed to assist with data preprocessing, analysis, and evaluation.
 
 ## Requirements
 
+To set up the environment for this project, follow these steps:
+
+### 1. Create and Activate a Conda Environment
+
+1. **Create a New Conda Environment:**
+
+   ```bash
+   conda create --name myenv python=3.12
+   ```
+
+   Replace `myenv` with your preferred environment name.
+
+2. **Activate the Environment:**
+
+   Once the environment is created, activate it using:
+   ```bash
+   conda activate myenv
+   ```
+
+### 2. Install Dependencies from `requirements.txt`
+
+With the environment activated, install the required packages listed in your `requirements.txt` file:
+```bash
+pip install -r requirements.txt
+```
 
 ## Data
-- Since I was not able to download data through API calls, the downloaded data is in the [raw_data/zip_files](/raw_data/zip_files) folder.
+- Since I was not able to download data through API calls, the downloaded data is located in the [raw_data/zip_files](/raw_data/zip_files) folder.
