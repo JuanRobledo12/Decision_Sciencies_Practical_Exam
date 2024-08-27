@@ -18,9 +18,8 @@ Welcome to my Practical Exam repository. Below you can find links to the files r
 - [helpers.py](helpers.py): A set of classes and methods that I developed to assist with data preprocessing, analysis, and evaluation.
 
 ## Observations
-- I decided to only use data of countries from the OECD to help me reduce the complexity of the data cleaning process. However, it might have impacted on the performance of the Q2, and Q4 models due to the lack of data.
-- In Q4 I need to further explore why I am getting overly optimistic metrics. In addition, I need to analyze the relationship between the features and the target variables with side-by-side boxplots or overlapping histograms.
-
+- I decided to only use data of countries from the OECD to familiarize myself with the data and problems. However, a further analysis is required with the inclusion of more countries.
+- In Q4 I need to further explore why I am getting overly optimistic metrics. In addition, I need to check if the dataset format I selected is correct and test the models with some modifications.
 ## Requirements
 
 To set up the environment for this project, follow these steps:
@@ -48,6 +47,3 @@ With the environment activated, install the required packages listed in your `re
 ```bash
 pip install -r requirements.txt
 ```
-
-## Data
-- Since I was not able to download data through API calls, the downloaded data is located in the [raw_data/zip_files](/raw_data/zip_files) folder.

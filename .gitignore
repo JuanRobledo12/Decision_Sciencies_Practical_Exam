@@ -162,4 +162,4 @@ cython_debug/
 #.idea/
 
 # Ignore raw csv files
-raw_data/csv_files
+raw_data/wbdata_raw.csv
